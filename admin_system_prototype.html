@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理系统 - 会员列表与设备管理原型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Custom scrollbar for subtle look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+    </style>
+</head>
+<body class="text-gray-800 text-xs leading-relaxed">
+
+<!-- Top Global Header -->
+<header class="bg-white border-b border-gray-200 px-6 py-2.5 flex items-center justify-between shadow-sm sticky top-0 z-20">
+    <div class="flex items-center space-x-6">
+        <div class="flex items-center space-x-2">
+            <div class="bg-blue-600 text-white p-1.5 rounded-lg">
+                <i class="fa-solid me-0 fa-shield-halved text-base"></i>
+            </div>
+            <span class="font-bold text-sm text-gray-800 tracking-wide">综合风控后台管理系统</span>
+        </div>
+        <nav class="flex space-x-1 border-l pl-6 border-gray-200">
+            <a href="#" class="px-3 py-1.5 rounded-md text-blue-600 bg-blue-50 font-medium">会员列表</a>
+            <a href="#" class="px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 transition">手机设备限制</a>
+            <a href="#" class="px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 transition">密码冻结管理</a>
+            <a href="#" class="px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 transition">批量修改密码</a>
+        </nav>
+    </div>
+    <div class="flex items-center space-x-4">
+        <span class="text-gray-500"><i class="fa-regular fa-user mr-1"></i>超级管理员 (admin)</span>
+        <a href="#" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-power-off"></i></a>
+    </div>
+</header>
+
+<main class="p-6 max-w-[1700px] mx-auto">
+    <!-- Filter Panel -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+        <!-- Date / Quick Filter Buttons -->
+        <div class="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-gray-100">
+            <button class="px-3 py-1 bg-blue-600 text-white rounded font-medium shadow-sm">今天</button>
+            <button class="px-3 py-1 bg-white border border-gray-300 text-gray-600 rounded hover:bg-gray-50">昨天</button>
+            <button class="px-3 py-1 bg-white border border-gray-300 text-gray-600 rounded hover:bg-gray-50">本周</button>
+            <button class="px-3 py-1 bg-white border border-gray-300 text-gray-600 rounded hover:bg-gray-50">上周</button>
+            <button class="px-3 py-1 bg-white border border-gray-300 text-gray-600 rounded hover:bg-gray-50">本月</button>
+            <button class="px-3 py-1 bg-white border border-gray-300 text-gray-600 rounded hover:bg-gray-50">上月</button>
+        </div>
+
+        <!-- Filter Fields -->
+        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div>
+                <label class="block text-gray-500 mb-1">时间范围</label>
+                <select class="w-full border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-blue-500">
+                    <option>注册时间</option>
+                    <option>登录时间</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-500 mb-1">账号 (多个逗号隔开)</label>
+                <input type="text" placeholder="请输入会员账号/ID" value="dev300302" class="w-full border border-gray-300 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-gray-500 mb-1">账号类型</label>
+                <select class="w-full border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-blue-500">
+                    <option>普通会员, 充值会员</option>
+                    <option>测试账号</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-500 mb-1">会员昵称</label>
+                <input type="text" placeholder="请输入会员昵称" class="w-full border border-gray-300 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-gray-500 mb-1">IP 类型</label>
+                <input type="text" placeholder="请输入 IP 地址" class="w-full border border-gray-300 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="flex items-end space-x-2">
+                <button class="px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-sm font-medium flex-1">
+                    <i class="fa-solid fa-magnifying-glass mr-1"></i> 查询
+                </button>
+                <button class="px-3 py-1.5 bg-orange-500 text-white rounded hover:bg-orange-600 shadow-sm">重置</button>
+                <button class="px-3 py-1.5 bg-emerald-600 text-white rounded hover:bg-emerald-700 shadow-sm">导出</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Indicator -->
+    <div class="flex items-center justify-between mb-3 px-1">
+        <div class="flex items-center space-x-2">
+            <button class="px-3 py-1 bg-white border border-gray-300 rounded text-gray-700 hover:bg-gray-50 flex items-center space-x-1">
+                <span>批量操作</span> <i class="fa-solid fa-chevron-down text-[10px] ml-1"></i>
+            </button>
+            <button class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">执行</button>
+        </div>
+        <div class="flex items-center space-x-6 text-xs font-medium">
+            <div>会员人数: <span class="text-blue-600 font-bold text-sm">99,620</span></div>
+            <div>充值会员人数: <span class="text-orange-500 font-bold text-sm">18,405</span></div>
+            <button class="px-3 py-1 bg-blue-50 text-blue-600 rounded border border-blue-200 hover:bg-blue-100">查看余额统计</button>
+        </div>
+    </div>
+
+    <!-- Data Table Container -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold text-[11px] uppercase tracking-wider">
+                        <th class="p-3 w-10 text-center"><input type="checkbox" class="rounded border-gray-300"></th>
+                        <th class="p-3">账号(会员ID)</th>
+                        <th class="p-3">备注</th>
+                        <th class="p-3">账号类型</th>
+                        <th class="p-3">站内余额</th>
+                        <th class="p-3">总充值</th>
+                        <th class="p-3">总提现</th>
+                        <th class="p-3">会员组</th>
+                        <th class="p-3">相关数据</th>
+                        <th class="p-3">VIP等级</th>
+                        <th class="p-3 bg-blue-50/50">会员信息</th>
+                        <th class="p-3">注册信息</th>
+                        <th class="p-3">财务详情</th>
+                        <th class="p-3">密码修改</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 text-gray-700">
+                    <!-- Target Row: dev300302 -->
+                    <tr class="hover:bg-blue-50/30 transition">
+                        <td class="p-3 text-center"><input type="checkbox" class="rounded border-gray-300"></td>
+                        <td class="p-3">
+                            <div class="font-semibold text-gray-900">dev300302 <span class="text-gray-400 font-normal">(266107)</span></div>
+                            <div class="text-gray-400">姓名: --</div>
+                            <div class="text-gray-400">昵称: dev300302</div>
+                            <div class="text-gray-400">邀请码: 1781590 <a href="#" class="text-blue-500 hover:underline">重置邀请码</a></div>
+                        </td>
+                        <td class="p-3 text-gray-400">
+                            <div>备注: --</div>
+                            <div>联系方式: <a href="#" class="text-blue-500 hover:underline">查看</a></div>
+                        </td>
+                        <td class="p-3">
+                            <div>类型: 充值会员</div>
+                            <div>会员状态: <span class="text-emerald-600 font-medium">正常</span></div>
+                            <div>是否在线: <span class="text-red-500 font-medium">离线</span></div>
+                            <div>是否充值: <span class="text-gray-900 font-medium">是</span></div>
+                        </td>
+                        <td class="p-3 font-medium">
+                            <div class="text-gray-900">CNY: 4208.60</div>
+                            <div class="text-gray-400">USDT: 0.00</div>
+                        </td>
+                        <td class="p-3 font-medium">
+                            <div class="text-gray-900">CNY: 5000.00</div>
+                            <div class="text-gray-400">USDT: 0.00</div>
+                        </td>
+                        <td class="p-3 font-medium">
+                            <div class="text-gray-900">CNY: 0.00</div>
+                            <div class="text-gray-400">USDT: 0.00</div>
+                        </td>
+                        <td class="p-3">
+                            <div class="text-gray-900">CNY: 默认固定层级用户组</div>
+                            <div class="text-gray-400">USDT: 默认固定层级用户组</div>
+                        </td>
+                        <td class="p-3 text-gray-500 space-y-0.5">
+                            <div>充值次数: 1次</div>
+                            <div>提现次数: 0次</div>
+                            <div>离线天数: 0天</div>
+                        </td>
+                        <td class="p-3 text-gray-500 space-y-0.5">
+                            <div>棋牌游戏: 0</div>
+                            <div>真人游戏: 0</div>
+                            <div>体育游戏: 0</div>
+                            <div>电子游戏: 0</div>
+                        </td>
+                        
+                        <!-- Core Column: Member Information Column with [Equipment List] Button -->
+                        <td class="p-3 bg-blue-50/50">
+                            <div class="space-y-1">
+                                <div><a href="#" class="text-blue-600 hover:underline">修改会员组</a></div>
+                                <div class="text-gray-500">上级代理: dev3003</div>
+                                <div>权限修改: <a href="#" class="text-blue-600 hover:underline">编辑</a></div>
+                                <!-- Target Equipment List Action Link -->
+                                <div class="pt-1.5 border-t border-blue-200/60">
+                                    <button onclick="openDeviceModal('dev300302', '266107')" 
+                                            class="inline-flex items-center px-2 py-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white rounded font-bold transition shadow-sm group">
+                                        <i class="fa-solid fa-mobile-screen mr-1 group-hover:scale-110 transition-transform"></i>
+                                        设备列表
+                                        <span id="badge-total-summary" class="ml-1 px-1.5 py-0.2 bg-red-200 text-red-800 text-[10px] rounded-full group-hover:bg-white group-hover:text-red-600">5</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="p-3">
+                            <div>时间: 2026-09-19 09:46:04</div>
+                            <div class="text-gray-400">IP: 45.78.40.120</div>
+                            <div class="text-gray-400">地址: 中国香港特别行政区</div>
+                        </td>
+                        <td class="p-3 space-y-1">
+                            <div>个人详情: <a href="#" class="text-blue-600 hover:underline">查看</a></div>
+                            <div>提现信息: <a href="#" class="text-blue-600 hover:underline">查看</a></div>
+                            <div>账变记录: <a href="#" class="text-blue-600 hover:underline">明细</a></div>
+                        </td>
+                        <td class="p-3 space-y-1">
+                            <div>登录密码: <a href="#" class="text-blue-600 hover:underline">修改</a></div>
+                            <div>支付密码: <a href="#" class="text-blue-600 hover:underline">修改</a></div>
+                            <button class="px-2 py-0.5 border border-blue-400 text-blue-600 rounded hover:bg-blue-50 text-[11px]">初始化钱包</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Table Footer / Pagination -->
+        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <div class="text-gray-500">显示第 1 至 1 项，共 1 项结果</div>
+            <div class="flex space-x-1">
+                <button class="px-2.5 py-1 bg-white border border-gray-300 text-gray-400 rounded cursor-not-allowed">上一页</button>
+                <button class="px-2.5 py-1 bg-blue-600 text-white rounded font-medium">1</button>
+                <button class="px-2.5 py-1 bg-white border border-gray-300 text-gray-400 rounded cursor-not-allowed">下一页</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ========================================================= -->
+<!-- DEVICE LIST MODAL WINDOW (符合 PRD 需求与交互设计) -->
+<!-- ========================================================= -->
+<div id="deviceModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden border border-gray-100 transform scale-95 transition-transform duration-200" id="modalContainer">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-4 bg-gray-900 text-white flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-blue-600 rounded-lg">
+                    <i class="fa-solid fa-mobile-screen-button text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-base tracking-wide flex items-center gap-2">
+                        设备列表管理
+                        <span class="text-xs bg-gray-700 text-gray-300 font-normal px-2 py-0.5 rounded-full" id="modalUserTitle">会员: dev300302 / ID: 266107</span>
+                    </h3>
+                    <p class="text-xs text-gray-400 mt-0.5">控制用户的常用受信设备与拦截解封未知/撞库风险设备</p>
+                </div>
+            </div>
+            <button onclick="closeDeviceModal()" class="text-gray-400 hover:text-white transition p-1 rounded-lg hover:bg-gray-800">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Tabs -->
+        <div class="bg-gray-100 border-b border-gray-200 px-6 flex items-center justify-between">
+            <div class="flex space-x-2 pt-3">
+                <button id="tabBtnTrusted" onclick="switchTab('trusted')" 
+                        class="px-5 py-2.5 rounded-t-lg font-semibold text-xs flex items-center space-x-2 border-t-2 border-x transition border-blue-600 bg-white text-blue-600">
+                    <i class="fa-solid fa-shield-cat text-sm"></i>
+                    <span>常用设备</span>
+                    <span id="badge-trusted-count" class="px-2 py-0.5 text-[10px] rounded-full bg-blue-100 text-blue-700 font-bold">3/5</span>
+                </button>
+                <button id="tabBtnUnknown" onclick="switchTab('unknown')" 
+                        class="px-5 py-2.5 rounded-t-lg font-semibold text-xs flex items-center space-x-2 border-t-2 border-x transition border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-200/60">
+                    <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                    <span>未知 / 风险设备</span>
+                    <span id="badge-unknown-count" class="px-2 py-0.5 text-[10px] rounded-full bg-red-100 text-red-600 font-bold">2</span>
+                </button>
+            </div>
+            <div class="text-xs text-gray-400">
+                <i class="fa-solid fa-circle-info mr-1"></i>单账号常用设备上限 5 台
+            </div>
+        </div>
+
+        <!-- Modal Body Content -->
+        <div class="p-6">
+            
+            <!-- TAB 1: Trusted Devices Panel -->
+            <div id="panelTrusted" class="space-y-4">
+                <!-- Top Toolbar -->
+                <div class="flex items-center justify-between p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl text-blue-800">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-check text-blue-600 text-base"></i>
+                        <span>当前已绑定 <b id="text-trusted-bind-count">3</b>/5 台常用设备。若绑定超 5 台，系统将按最老登录时间自动淘汰降级。</span>
+                    </div>
+                    <button onclick="confirmClearAllTrusted()" class="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition shadow-sm flex items-center space-x-1.5 shrink-0">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>一键移除全部常用设备</span>
+                    </button>
+                </div>
+
+                <!-- Trusted Devices Table -->
+                <div class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 text-gray-500 font-semibold border-b border-gray-200 text-[11px]">
+                            <tr>
+                                <th class="p-3">设备 ID / 指纹 (Device Token)</th>
+                                <th class="p-3">设备型号 / 名称</th>
+                                <th class="p-3">最近成功登录 IP</th>
+                                <th class="p-3">最近登录时间</th>
+                                <th class="p-3">状态</th>
+                                <th class="p-3 text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trustedTableBody" class="divide-y divide-gray-100 text-xs text-gray-700">
+                            <!-- JS Will Render Rows Here -->
+                        </tbody>
+                    </table>
+                    <!-- Empty State Placeholder -->
+                    <div id="emptyTrusted" class="hidden p-8 text-center text-gray-400">
+                        <i class="fa-solid fa-folder-open text-3xl mb-2 text-gray-300"></i>
+                        <p>暂无常用设备绑定记录</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: Unknown / Risk Devices Panel -->
+            <div id="panelUnknown" class="space-y-4 hidden">
+                <!-- Top Toolbar -->
+                <div class="flex items-center justify-between p-3.5 bg-amber-50/70 border border-amber-100 rounded-xl text-amber-800">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-shield-virus text-amber-600 text-base"></i>
+                        <span>拦截并隔离未绑定设备报错。密码错 3 次锁定 72 小时，1 小时跨设备错 5 次熔断未知入口 24 小时。</span>
+                    </div>
+                    <button onclick="confirmClearAllUnknown()" class="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition shadow-sm flex items-center space-x-1.5 shrink-0">
+                        <i class="fa-solid fa-unlock-keyhole"></i>
+                        <span>一键移除/解封所有未知设备</span>
+                    </button>
+                </div>
+
+                <!-- Unknown Devices Table -->
+                <div class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 text-gray-500 font-semibold border-b border-gray-200 text-[11px]">
+                            <tr>
+                                <th class="p-3">设备 ID / 指纹 (Device Token)</th>
+                                <th class="p-3">设备型号 / 名称</th>
+                                <th class="p-3">最近尝试 IP</th>
+                                <th class="p-3">最近尝试时间</th>
+                                <th class="p-3">当前状态</th>
+                                <th class="p-3 text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="unknownTableBody" class="divide-y divide-gray-100 text-xs text-gray-700">
+                            <!-- JS Will Render Rows Here -->
+                        </tbody>
+                    </table>
+                    <!-- Empty State Placeholder -->
+                    <div id="emptyUnknown" class="hidden p-8 text-center text-gray-400">
+                        <i class="fa-solid fa-shield-check text-3xl mb-2 text-emerald-400"></i>
+                        <p>当前没有拦截到任何未信任或被封禁的风险设备</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <span class="text-xs text-gray-500">提示：移除设备后，用户下次在该设备尝试登录需要验证密码无误后方可重新升格为常用设备。</span>
+            <button onclick="closeDeviceModal()" class="px-5 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition">
+                关闭
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification Element -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-10 opacity-0 transition-all duration-300 pointer-events-none flex items-center space-x-2 px-4 py-3 rounded-xl shadow-lg text-white font-medium text-xs">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-base"></i>
+    <span id="toastMsg">操作成功</span>
+</div>
+
+<script>
+    // ==========================================
+    // MOCK DATA STORE (模拟真实数据)
+    // ==========================================
+    let trustedDevices = [
+        {
+            id: 'td_1',
+            token: 'a8f9e120bc94...d8912',
+            fullToken: 'a8f9e120bc943102a9412d891204fa1a',
+            name: 'iPhone 15 Pro Max',
+            ip: '113.88.102.45 (广东深圳)',
+            time: '2026-09-19 11:20:14',
+            status: 'TRUSTED'
+        },
+        {
+            id: 'td_2',
+            token: 'f412a90184b2...12a44',
+            fullToken: 'f412a90184b2901c89012312a449102b',
+            name: 'iPad Air (5th Gen)',
+            ip: '113.88.102.45 (广东深圳)',
+            time: '2026-09-18 20:15:02',
+            status: 'TRUSTED'
+        },
+        {
+            id: 'td_3',
+            token: 'b102941aa901...902a1',
+            fullToken: 'b102941aa9018821a901238902a12391',
+            name: 'MacBook Pro App',
+            ip: '183.14.28.19 (广东广州)',
+            time: '2026-09-15 09:30:00',
+            status: 'TRUSTED'
+        }
+    ];
+
+    let unknownDevices = [
+        {
+            id: 'ud_1',
+            token: 'e71029481a02...71239',
+            fullToken: 'e71029481a0298124912712390a12b3c',
+            name: 'Android Proxy Script',
+            ip: '45.78.40.120 (黑产/代理IP)',
+            time: '2026-09-19 12:05:11',
+            status: 'BLOCKED',
+            lockRemain: '剩余 48小时'
+        },
+        {
+            id: 'ud_2',
+            token: '99012a412891...0012f',
+            fullToken: '99012a412891238910230012fa1234bc',
+            name: 'Chrome Browser (未知)',
+            ip: '119.28.12.90 (浙江杭州)',
+            time: '2026-09-19 11:50:33',
+            status: 'NORMAL',
+            lockRemain: ''
+        }
+    ];
+
+    let activeTab = 'trusted';
+
+    // ==========================================
+    // RENDER FUNCTIONS (界面渲染函数)
+    // ==========================================
+    function renderTables() {
+        // Render Trusted Devices Table
+        const trustedTbody = document.getElementById('trustedTableBody');
+        const emptyTrusted = document.getElementById('emptyTrusted');
+        trustedTbody.innerHTML = '';
+
+        if (trustedDevices.length === 0) {
+            emptyTrusted.classList.remove('hidden');
+        } else {
+            emptyTrusted.classList.add('hidden');
+            trustedDevices.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/80 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-medium text-gray-800" title="${item.fullToken}">
+                        ${item.token}
+                        <button onclick="copyToClipboard('${item.fullToken}')" class="text-gray-400 hover:text-blue-600 ml-1">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </td>
+                    <td class="p-3 font-medium text-gray-900"><i class="fa-solid fa-mobile-button text-gray-400 mr-1.5"></i>${item.name}</td>
+                    <td class="p-3 text-gray-600">${item.ip}</td>
+                    <td class="p-3 text-gray-500">${item.time}</td>
+                    <td class="p-3">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700">
+                            <i class="fa-solid fa-circle text-[6px] mr-1"></i>已信任
+                        </span>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="confirmRemoveSingle('trusted', '${item.id}')" class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-600 hover:text-white font-medium transition">
+                            解绑/移除
+                        </button>
+                    </td>
+                `;
+                trustedTbody.appendChild(tr);
+            });
+        }
+
+        // Render Unknown Devices Table
+        const unknownTbody = document.getElementById('unknownTableBody');
+        const emptyUnknown = document.getElementById('emptyUnknown');
+        unknownTbody.innerHTML = '';
+
+        if (unknownDevices.length === 0) {
+            emptyUnknown.classList.remove('hidden');
+        } else {
+            emptyUnknown.classList.add('hidden');
+            unknownDevices.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/80 transition";
+                
+                let statusBadge = item.status === 'BLOCKED' 
+                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">
+                        <i class="fa-solid fa-lock text-[8px] mr-1"></i>已封禁 (${item.lockRemain})
+                       </span>`
+                    : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600">
+                        正常 (未封禁)
+                       </span>`;
+
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-medium text-gray-800" title="${item.fullToken}">
+                        ${item.token}
+                        <button onclick="copyToClipboard('${item.fullToken}')" class="text-gray-400 hover:text-blue-600 ml-1">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </td>
+                    <td class="p-3 font-medium text-gray-900"><i class="fa-solid fa-laptop text-gray-400 mr-1.5"></i>${item.name}</td>
+                    <td class="p-3 text-gray-600">${item.ip}</td>
+                    <td class="p-3 text-gray-500">${item.time}</td>
+                    <td class="p-3">${statusBadge}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="confirmRemoveSingle('unknown', '${item.id}')" class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-600 hover:text-white font-medium transition">
+                            ${item.status === 'BLOCKED' ? '解封/移除' : '移除记录'}
+                        </button>
+                    </td>
+                `;
+                unknownTbody.appendChild(tr);
+            });
+        }
+
+        // Update Badges & Counters
+        document.getElementById('badge-trusted-count').innerText = `${trustedDevices.length}/5`;
+        document.getElementById('text-trusted-bind-count').innerText = trustedDevices.length;
+        document.getElementById('badge-unknown-count').innerText = unknownDevices.length;
+        
+        // Update summary badge on the main page button
+        const totalNum = trustedDevices.length + unknownDevices.length;
+        document.getElementById('badge-total-summary').innerText = totalNum;
+    }
+
+    // ==========================================
+    // TAB SWITCHING (切换标签页)
+    // ==========================================
+    function switchTab(tab) {
+        activeTab = tab;
+        const btnTrusted = document.getElementById('tabBtnTrusted');
+        const btnUnknown = document.getElementById('tabBtnUnknown');
+        const panelTrusted = document.getElementById('panelTrusted');
+        const panelUnknown = document.getElementById('panelUnknown');
+
+        if (tab === 'trusted') {
+            btnTrusted.className = "px-5 py-2.5 rounded-t-lg font-semibold text-xs flex items-center space-x-2 border-t-2 border-x transition border-blue-600 bg-white text-blue-600";
+            btnUnknown.className = "px-5 py-2.5 rounded-t-lg font-semibold text-xs flex items-center space-x-2 border-t-2 border-x transition border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-200/60";
+            panelTrusted.classList.remove('hidden');
+            panelUnknown.classList.add('hidden');
+        } else {
+            btnUnknown.className = "px-5 py-2.5 rounded-t-lg font-semibold text-xs flex items-center space-x-2 border-t-2 border-x transition border-red-600 bg-white text-red-600";
+            btnTrusted.className = "px-5 py-2.5 rounded-t-lg font-semibold text-xs flex items-center space-x-2 border-t-2 border-x transition border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-200/60";
+            panelUnknown.classList.remove('hidden');
+            panelTrusted.classList.add('hidden');
+        }
+    }
+
+    // ==========================================
+    // MODAL OPEN / CLOSE (弹窗打开与关闭)
+    // ==========================================
+    function openDeviceModal(username, userId) {
+        document.getElementById('modalUserTitle').innerText = `会员: ${username} / ID: ${userId}`;
+        const modal = document.getElementById('deviceModal');
+        const container = document.getElementById('modalContainer');
+        
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
+        }, 10);
+
+        renderTables();
+    }
+
+    function closeDeviceModal() {
+        const modal = document.getElementById('deviceModal');
+        const container = document.getElementById('modalContainer');
+        
+        container.classList.remove('scale-100');
+        container.classList.add('scale-95');
+        modal.classList.add('opacity-0');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 200);
+    }
+
+    // ==========================================
+    // ACTION HANDLERS (交互与提示动作)
+    // ==========================================
+    function confirmRemoveSingle(type, id) {
+        const isTrusted = type === 'trusted';
+        const msg = isTrusted 
+            ? '确定解除该常用设备的信任绑定吗？解绑后该设备下次登录将重新按未知设备流程校验。' 
+            : '确定清除并解除该未知设备的封禁与报错记录吗？';
+
+        if (confirm(msg)) {
+            if (isTrusted) {
+                trustedDevices = trustedDevices.filter(d => d.id !== id);
+                showToast('已成功解绑该常用设备', 'success');
+            } else {
+                unknownDevices = unknownDevices.filter(d => d.id !== id);
+                showToast('已成功解除该未知设备记录/封禁', 'success');
+            }
+            renderTables();
+        }
+    }
+
+    function confirmClearAllTrusted() {
+        if (trustedDevices.length === 0) {
+            showToast('当前没有可移除的常用设备', 'info');
+            return;
+        }
+        if (confirm('警告：确定要一键清空该会员的所有常用设备绑定吗？清空后会员需要用正确密码重新登录绑定设备。')) {
+            trustedDevices = [];
+            renderTables();
+            showToast('已一键清空全部常用设备绑定', 'success');
+        }
+    }
+
+    function confirmClearAllUnknown() {
+        if (unknownDevices.length === 0) {
+            showToast('当前没有未知/风险设备记录', 'info');
+            return;
+        }
+        if (confirm('确定清空所有未知设备的试错与封禁锁吗？清空后将立即解除对未知入口的所有隔离防护。')) {
+            unknownDevices = [];
+            renderTables();
+            showToast('已一键解封并移除所有未知风险设备记录', 'success');
+        }
+    }
+
+    function copyToClipboard(text) {
+        const tempInput = document.createElement('input');
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        showToast('Device Token 已复制到剪贴板', 'info');
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+        const toastIcon = document.getElementById('toastIcon');
+
+        toastMsg.innerText = message;
+        
+        if (type === 'success') {
+            toast.className = "fixed bottom-6 right-6 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center space-x-2 px-4 py-3 rounded-xl shadow-lg text-white font-medium text-xs bg-emerald-600";
+            toastIcon.className = "fa-solid fa-circle-check text-base";
+        } else {
+            toast.className = "fixed bottom-6 right-6 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center space-x-2 px-4 py-3 rounded-xl shadow-lg text-white font-medium text-xs bg-blue-600";
+            toastIcon.className = "fa-solid fa-circle-info text-base";
+        }
+
+        setTimeout(() => {
+            toast.className = "fixed bottom-6 right-6 z-50 transform translate-y-10 opacity-0 transition-all duration-300 pointer-events-none flex items-center space-x-2 px-4 py-3 rounded-xl shadow-lg text-white font-medium text-xs bg-gray-800";
+        }, 2500);
+    }
+</script>
+
+</body>
+</html>
